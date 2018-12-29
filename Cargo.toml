@@ -1,0 +1,9 @@
+[package]
+name = "good-morning"
+version = "0.1.0"
+authors = ["rom"]
+edition = "2018"
+
+[dependencies]
+quick-xml = "0.13.1"
+reqwest = "0.9.5"
