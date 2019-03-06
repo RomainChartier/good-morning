@@ -7,3 +7,10 @@ edition = "2018"
 [dependencies]
 quick-xml = "0.13.1"
 reqwest = "0.9.5"
+structopt = "0.2.10"
+log = "0.4.6"
+simple_logger = "1.0.1"
+
+[dependencies.rusqlite]
+version = "0.16.0"
+features = ["bundled"]
