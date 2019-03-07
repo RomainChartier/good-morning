@@ -19,7 +19,7 @@ pub struct Item {
     pub title: String,
     pub pub_date: String,
     pub guid: String,
-    pub link: String,
+    pub link: String
 }
 
 fn parse_item<B: std::io::BufRead>(reader: &mut Reader<B>) -> Item {
