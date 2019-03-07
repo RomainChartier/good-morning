@@ -26,6 +26,14 @@ pub struct MonitoredFeed {
     pub last_check: Option<FeedCheckResult>,
 }
 
+#[derive(Copy, Clone, Debug)]
+pub enum FeedUpdateKind {
+    FirstCheck,
+    NewArticle,
+    Title,
+    LastArticle,
+}
+
 pub trait SubscriptionRepository {
     fn init(&self);
     fn get_monitored_feeds(&self) -> Vec<MonitoredFeed>;

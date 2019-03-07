@@ -19,13 +19,16 @@ pub fn read_csv(file_path: &str) -> HashSet<(String, FeedType)> {
         if tokens.len() != 2 {
             warn!("Found bad line (invalid column count) {:?}", line);
             continue;
-        } 
+        }
 
         let url = tokens[0];
         let kind_str = tokens[1];
 
         match FeedType::from_str(kind_str) {
-            Ok(feed_type) => { result.insert((url.to_string(), feed_type)); () },
+            Ok(feed_type) => {
+                result.insert((url.to_string(), feed_type));
+                ()
+            }
             Err(_err) => warn!("Found bad line (invalid feed kind) {:?}", line),
         }
     }

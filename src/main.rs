@@ -5,21 +5,14 @@ use structopt::StructOpt;
 extern crate log;
 extern crate simple_logger;
 
+use log::Level;
+
 use rusqlite::{Connection, OpenFlags};
-use std::str::FromStr;
-use std::io::{self, Read};
 
 mod lib;
 
 use lib::common::*;
-use lib::rss::*;
 use lib::data::SQliteSubscriptionRepository;
-
-
-
-use lib::rss::*;
-
-
 
 #[derive(StructOpt)]
 #[structopt(name = "good-morning")]
@@ -51,26 +44,7 @@ enum AppCommand {
 }
 
 fn main() -> Result<(), Box<std::error::Error>> {
-    //env_logger::init();
-
-    //println!("GET https://nickcraver.com/blog/feed.xml");
-
-    //let mut res = reqwest::get("https://nickcraver.com/blog/feed.xml")?;
-    
-
-    //println!("Status: {}", res.status());
-    //println!("Headers:\n{:?}", res.headers());
-
-    // copy the response body directly to stdout
-    //std::io::copy(&mut res, &mut std::io::stdout())?;
-
-    //let body = res.text()?;
-
-    //let feed = rss::parse_rss_feed(body.as_str());
-
-    //println!("{:?}", feed);
-
-    simple_logger::init()?;
+    simple_logger::init_with_level(Level::Debug)?;
 
     info!("starting up");
 
@@ -80,15 +54,15 @@ fn main() -> Result<(), Box<std::error::Error>> {
         .data_path
         .and_then(|dp| dp.to_str().map(|p| p.to_string()));
 
-    let file_path = match path {
+    let data_file_path = match path {
         Some(path) => path,
         None => "./good-morning.db",
     };
 
-    info!("using data from {:?}", file_path);
+    info!("using data from {:?}", data_file_path);
 
     let flags = OpenFlags::SQLITE_OPEN_READ_WRITE | OpenFlags::SQLITE_OPEN_CREATE;
-    let conn = Connection::open_with_flags(file_path, flags).unwrap();
+    let conn = Connection::open_with_flags(data_file_path, flags).unwrap();
 
     let repository = SQliteSubscriptionRepository::new(conn);
 

@@ -136,8 +136,16 @@ impl SubscriptionRepository for SQliteSubscriptionRepository {
             .execute(
                 "INSERT INTO subscription_check (subscription_id, check_date, title, pub_date, last_article_title, last_article_guid, last_article_pub_date, last_article_hash) 
                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-                //&[&url as &ToSql, &kind as &ToSql],
-                NO_PARAMS
+                &[
+                    &feed.id as &ToSql,
+                    &check.check_date as &ToSql,
+                    &check.title as &ToSql,
+                    &check.pub_date as &ToSql,
+                    &check.last_article_title as &ToSql,
+                    &check.last_article_guid as &ToSql,
+                    &check.last_article_pub_date as &ToSql,
+                    &check.last_article_hash as &ToSql,
+                ]
             )
             .unwrap();
     }
