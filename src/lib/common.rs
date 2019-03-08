@@ -34,7 +34,7 @@ pub enum FeedUpdateKind {
     LastArticle,
 }
 
-pub trait SubscriptionRepository {
+pub trait SubscriptionRepository: Send {
     fn init(&self);
     fn get_monitored_feeds(&self) -> Vec<MonitoredFeed>;
     fn add_sub(&self, url: &str, kind: FeedType);

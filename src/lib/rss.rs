@@ -19,7 +19,7 @@ pub struct Item {
     pub title: String,
     pub pub_date: String,
     pub guid: String,
-    pub link: String
+    pub link: String,
 }
 
 fn parse_item<B: std::io::BufRead>(reader: &mut Reader<B>) -> Item {
@@ -55,10 +55,11 @@ fn parse_item<B: std::io::BufRead>(reader: &mut Reader<B>) -> Item {
                 }
                 _ => (),
             },
-            Ok(Event::End(ref e)) => match e.name() {
-                b"item" => break,
-                _ => (),
-            },
+            Ok(Event::End(ref e)) => {
+                if let b"item" = e.name() {
+                    break;
+                }
+            }
             Ok(Event::Eof) => break, // exits the loop when reaching end of file
             Err(e) => panic!("Error at position {}: {:?}", reader.buffer_position(), e),
             _ => (), // There are several other `Event`s we do not consider here
@@ -107,10 +108,11 @@ fn parse_channel<B: std::io::BufRead>(reader: &mut Reader<B>) -> Channel {
                 b"item" => items.push(parse_item(reader)),
                 _ => (),
             },
-            Ok(Event::End(ref e)) => match e.name() {
-                b"channel" => break,
-                _ => (),
-            },
+            Ok(Event::End(ref e)) => {
+                if let b"channel" = e.name() {
+                    break;
+                }
+            }
             Ok(Event::Eof) => break, // exits the loop when reaching end of file
             Err(e) => panic!("Error at position {}: {:?}", reader.buffer_position(), e),
             _ => (), // There are several other `Event`s we do not consider here
@@ -140,10 +142,11 @@ pub fn parse_rss_feed(xml: &str) -> Feed {
 
     loop {
         match reader.read_event(&mut buf) {
-            Ok(Event::Start(ref e)) => match e.name() {
-                b"channel" => channels.push(parse_channel(&mut reader)),
-                _ => (),
-            },
+            Ok(Event::Start(ref e)) => {
+                if let b"channel" = e.name() {
+                    channels.push(parse_channel(&mut reader))
+                }
+            }
             Ok(Event::Eof) => break, // exits the loop when reaching end of file
             Err(e) => panic!("Error at position {}: {:?}", reader.buffer_position(), e),
             _ => (), // There are several other `Event`s we do not consider here

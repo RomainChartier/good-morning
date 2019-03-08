@@ -27,7 +27,6 @@ pub fn read_csv(file_path: &str) -> HashSet<(String, FeedType)> {
         match FeedType::from_str(kind_str) {
             Ok(feed_type) => {
                 result.insert((url.to_string(), feed_type));
-                ()
             }
             Err(_err) => warn!("Found bad line (invalid feed kind) {:?}", line),
         }

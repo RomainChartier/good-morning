@@ -12,7 +12,7 @@ pub struct SQliteSubscriptionRepository {
 
 impl SQliteSubscriptionRepository {
     pub fn new(conn: Connection) -> SQliteSubscriptionRepository {
-        SQliteSubscriptionRepository { conn: conn }
+        SQliteSubscriptionRepository { conn }
     }
 
     fn execute(&self, sql: &str) -> Result<usize> {
@@ -112,7 +112,7 @@ impl SubscriptionRepository for SQliteSubscriptionRepository {
                 id: row.get(0),
                 url: row.get(1),
                 kind: row.get(2),
-                last_check: last_check,
+                last_check,
             }
         })
         .unwrap()

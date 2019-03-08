@@ -11,6 +11,7 @@ structopt = "0.2.10"
 log = "0.4.6"
 simple_logger = "1.0.1"
 chrono = "0.4.6"
+crossbeam = "0.7.1"
 
 [dependencies.rusqlite]
 version = "0.16.0"

@@ -44,7 +44,7 @@ enum AppCommand {
 }
 
 fn main() -> Result<(), Box<std::error::Error>> {
-    simple_logger::init_with_level(Level::Debug)?;
+    simple_logger::init_with_level(Level::Error)?;
 
     info!("starting up");
 
