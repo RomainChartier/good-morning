@@ -142,3 +142,80 @@ pub fn parse_rss_feed(xml: &str) -> Feed {
 
     Feed { channels }
 }
+
+#[test]
+pub fn should_parse_rss_sample_properly() {
+    let rss_sample = r#"
+        <?xml version="1.0"?>
+        <rss version="2.0">
+            <channel>
+                <title>Liftoff News</title>
+                <link>http://liftoff.msfc.nasa.gov/</link>
+                <description>Liftoff to Space Exploration.</description>
+                <language>en-us</language>
+                <pubDate>Tue, 10 Jun 2003 04:00:00 GMT</pubDate>
+                <lastBuildDate>Tue, 10 Jun 2003 09:41:01 GMT</lastBuildDate>
+                <docs>http://blogs.law.harvard.edu/tech/rss</docs>
+                <generator>Weblog Editor 2.0</generator>
+                <managingEditor>editor@example.com</managingEditor>
+                <webMaster>webmaster@example.com</webMaster>
+                <item>
+                    <title>The Engine That Does More</title>
+                    <link>http://liftoff.msfc.nasa.gov/news/2003/news-VASIMR.asp</link>
+                    <description>Before man travels to Mars, NASA hopes to design new engines that will let us fly through the Solar System more quickly.  The proposed VASIMR engine would do that.</description>
+                    <pubDate>Tue, 27 May 2003 08:37:32 GMT</pubDate>
+                    <guid>http://liftoff.msfc.nasa.gov/2003/05/27.html#item571</guid>
+                </item>
+                <item>
+                    <title>Astronauts' Dirty Laundry</title>
+                    <link>http://liftoff.msfc.nasa.gov/news/2003/news-laundry.asp</link>
+                    <description>Compared to earlier spacecraft, the International Space Station has many luxuries, but laundry facilities are not one of them.  Instead, astronauts have other options.</description>
+                    <pubDate>Tue, 20 May 2003 08:56:02 GMT</pubDate>
+                    <guid>http://liftoff.msfc.nasa.gov/2003/05/20.html#item570</guid>
+                </item>
+            </channel>
+        </rss>
+    "#;
+
+    let feed = parse_rss_feed(rss_sample);
+    let channel = feed.channels.first().unwrap();
+
+    assert_eq!(channel.title, "Liftoff News");
+    assert_eq!(channel.link, "http://liftoff.msfc.nasa.gov/");
+    assert_eq!(
+        channel.last_build_date,
+        Some("Tue, 10 Jun 2003 09:41:01 GMT".to_string())
+    );
+
+    let item = &channel.items[0];
+
+    assert_eq!(item.title, Some("The Engine That Does More".to_string()));
+    assert_eq!(
+        item.link,
+        Some("http://liftoff.msfc.nasa.gov/news/2003/news-VASIMR.asp".to_string())
+    );
+    assert_eq!(
+        item.guid,
+        Some("http://liftoff.msfc.nasa.gov/2003/05/27.html#item571".to_string())
+    );
+    assert_eq!(
+        item.pub_date,
+        Some("Tue, 27 May 2003 08:37:32 GMT".to_string())
+    );
+
+    let item = &channel.items[1];
+
+    assert_eq!(item.title, Some("Astronauts' Dirty Laundry".to_string()));
+    assert_eq!(
+        item.link,
+        Some("http://liftoff.msfc.nasa.gov/news/2003/news-laundry.asp".to_string())
+    );
+    assert_eq!(
+        item.guid,
+        Some("http://liftoff.msfc.nasa.gov/2003/05/20.html#item570".to_string())
+    );
+    assert_eq!(
+        item.pub_date,
+        Some("Tue, 20 May 2003 08:56:02 GMT".to_string())
+    );
+}

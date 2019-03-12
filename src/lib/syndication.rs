@@ -1,9 +1,8 @@
 use chrono::Utc;
 use reqwest;
 
-
-use super::common::*;
 use super::atom::*;
+use super::common::*;
 use super::rss::*;
 
 pub fn check_feed(feed: &MonitoredFeed) -> Option<FeedCheckResult> {
@@ -53,7 +52,7 @@ fn check_rss(feed: &MonitoredFeed, body: &str) -> Option<FeedCheckResult> {
 }
 
 fn check_atom(feed: &MonitoredFeed, body: &str) -> Option<FeedCheckResult> {
-     debug!("Parsing atom feed {:?}", feed.url);
+    debug!("Parsing atom feed {:?}", feed.url);
 
     let feed = parse_atom_feed(body);
     let last_article = feed.entries.first(); //TODO ...
