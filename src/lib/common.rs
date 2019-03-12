@@ -11,7 +11,7 @@ pub enum FeedType {
 pub struct FeedCheckResult {
     pub check_date: String,
     pub title: String,
-    pub pub_date: String,
+    pub pub_date: Option<String>,
     pub last_article_title: Option<String>,
     pub last_article_guid: Option<String>,
     pub last_article_pub_date: Option<String>,

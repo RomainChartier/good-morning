@@ -1,8 +1,9 @@
+mod atom;
 pub mod common;
 pub mod data;
-pub mod import;
+mod import;
 mod rss;
-pub mod syndication;
+mod syndication;
 
 use crossbeam::crossbeam_channel::bounded;
 use std::collections::HashSet;

@@ -54,7 +54,7 @@ impl SubscriptionRepository for SQliteSubscriptionRepository {
 
                 check_date            TEXT NOT NULL,
                 title                 TEXT NOT NULL,
-                pub_date              TEXT NOT NULL,
+                pub_date              TEXT,
 
                 last_article_title    TEXT NOT NULL,
                 last_article_guid     TEXT NOT NULL,
@@ -131,7 +131,7 @@ impl SubscriptionRepository for SQliteSubscriptionRepository {
     }
 
     fn add_check(&self, feed: &MonitoredFeed, check: &FeedCheckResult) {
-        debug!("Adding check for feed {:?}", feed.id);
+        println!("Adding check for feed {:?}", feed.id);
         self.conn
             .execute(
                 "INSERT INTO subscription_check (subscription_id, check_date, title, pub_date, last_article_title, last_article_guid, last_article_pub_date, last_article_hash) 
