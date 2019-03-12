@@ -5,6 +5,9 @@ use structopt::StructOpt;
 extern crate log;
 extern crate simple_logger;
 
+#[macro_use]
+extern crate failure;
+
 use log::Level;
 
 use rusqlite::{Connection, OpenFlags};

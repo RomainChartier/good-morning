@@ -1,6 +1,8 @@
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader;
 
+use super::common::GoodMorningError;
+
 #[derive(Debug)]
 pub struct Feed {
     pub title: String,
@@ -17,8 +19,7 @@ pub struct Entry {
     pub updated: String,
 }
 
-//TODO should return Result<Item, Error>
-fn parse_entry<B: std::io::BufRead>(reader: &mut Reader<B>) -> Entry {
+fn parse_entry<B: std::io::BufRead>(reader: &mut Reader<B>) -> Result<Entry, GoodMorningError> {
     let mut buf = Vec::new();
 
     let mut title: String = "".to_string();
@@ -29,10 +30,10 @@ fn parse_entry<B: std::io::BufRead>(reader: &mut Reader<B>) -> Entry {
     loop {
         match reader.read_event(&mut buf) {
             Ok(Event::Start(ref e)) => match e.name() {
-                b"title" => title = reader.read_text(b"title", &mut buf).unwrap(),
-                b"link" => link = extract_attr(b"href", &e, reader),
-                b"id" => guid = reader.read_text(b"id", &mut buf).unwrap(),
-                b"updated" => updated = reader.read_text(b"updated", &mut buf).unwrap(),
+                b"title" => title = reader.read_text(b"title", &mut buf)?,
+                b"link" => link = extract_attr(b"href", &e, reader)?,
+                b"id" => guid = reader.read_text(b"id", &mut buf)?,
+                b"updated" => updated = reader.read_text(b"updated", &mut buf)?,
                 _ => (),
             },
             Ok(Event::End(ref e)) => {
@@ -41,7 +42,7 @@ fn parse_entry<B: std::io::BufRead>(reader: &mut Reader<B>) -> Entry {
                 }
             }
             Ok(Event::Eof) => break,
-            Err(e) => panic!("Error at position {}: {:?}", reader.buffer_position(), e),
+            Err(e) => return Err(GoodMorningError::XmlParse(e)),
             _ => (),
         }
 
@@ -49,18 +50,23 @@ fn parse_entry<B: std::io::BufRead>(reader: &mut Reader<B>) -> Entry {
         buf.clear();
     }
 
-    debug!("Found entry {:?}", title);
+    if title.is_empty() || link.is_empty() || updated.is_empty() || guid.is_empty() {
+        return Err(GoodMorningError::MissingFeedInfo);
+    }
 
-    Entry {
+    Ok(Entry {
         title,
         link,
         guid,
         updated,
-    }
+    })
 }
 
-//TODO should return Result<Feed, Error>
-pub fn parse_atom_feed(xml: &str) -> Feed {
+pub fn parse_atom_feed(xml: &str) -> Result<Feed, GoodMorningError> {
+    if xml.is_empty() {
+        return Err(GoodMorningError::Parse);
+    }
+
     let mut reader = Reader::from_str(xml);
     reader.trim_text(true).expand_empty_elements(true);
 
@@ -75,14 +81,14 @@ pub fn parse_atom_feed(xml: &str) -> Feed {
     loop {
         match reader.read_event(&mut buf) {
             Ok(Event::Start(ref e)) => match e.name() {
-                b"title" => title = reader.read_text(b"title", &mut buf).unwrap(),
-                b"updated" => updated = reader.read_text(b"updated", &mut buf).unwrap(),
-                b"link" => link = extract_attr(b"href", &e, &mut reader),
-                b"entry" => entries.push(parse_entry(&mut reader)),
-                name => println!("{:?}", String::from_utf8(name.to_vec())),
+                b"title" => title = reader.read_text(b"title", &mut buf)?,
+                b"updated" => updated = reader.read_text(b"updated", &mut buf)?,
+                b"link" => link = extract_attr(b"href", &e, &mut reader)?,
+                b"entry" => entries.push(parse_entry(&mut reader)?),
+                _ => (),
             },
             Ok(Event::Eof) => break,
-            Err(e) => panic!("Error at position {}: {:?}", reader.buffer_position(), e),
+            Err(e) => return Err(GoodMorningError::XmlParse(e)),
             _ => (),
         }
 
@@ -90,25 +96,30 @@ pub fn parse_atom_feed(xml: &str) -> Feed {
         buf.clear();
     }
 
-    Feed {
+    if title.is_empty() || link.is_empty() || updated.is_empty() || entries.is_empty() {
+        return Err(GoodMorningError::MissingFeedInfo);
+    }
+
+    Ok(Feed {
         title,
         link,
         updated,
         entries,
-    }
+    })
 }
 
 fn extract_attr<B: std::io::BufRead>(
     name: &[u8],
     event: &BytesStart,
     reader: &mut Reader<B>,
-) -> String {
-    event
-        .attributes()
-        .map(|a| a.unwrap())
-        .find(|a| dbg!(a.key == name))
-        .map(|a| a.unescape_and_decode_value(reader).unwrap())
-        .unwrap()
+) -> Result<String, GoodMorningError> {
+    for attr in event.attributes() {
+        let attr = attr?;
+        if attr.key == name {
+            return Ok(attr.unescape_and_decode_value(reader)?);
+        }
+    }
+    Err(GoodMorningError::Parse)
 }
 
 #[test]
@@ -134,7 +145,7 @@ pub fn should_parse_atom_sample_properly() {
             </entry>
         </feed>    
     "#;
-    let feed = parse_atom_feed(atom_sample);
+    let feed = parse_atom_feed(atom_sample).unwrap();
 
     assert_eq!(feed.title, "Example Feed");
     assert_eq!(feed.link, "http://example.org/");
@@ -146,4 +157,97 @@ pub fn should_parse_atom_sample_properly() {
     assert_eq!(entry.link, "http://example.org/2003/12/13/atom03");
     assert_eq!(entry.guid, "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a");
     assert_eq!(entry.updated, "2003-12-13T18:30:02Z");
+}
+
+#[test]
+pub fn should_fail_on_invalid_xml() {
+    let atom_sample = r#"
+        <?xml version="1.0" encoding="utf-8"?>
+        <feed xmlns="http://www.w3.org/2005/Atom">
+
+            <title>Example Feed</title>
+            <link href="http://example.org/"/>
+            <updated>2003-12-13T18:30:02Z</updated>
+            <author>
+            <name>John Doe
+            </author>
+            <id>urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6</id>
+
+            <entry>
+                <title>Atom-Powered Robots Run Amok</title>
+                <link href="http://example.org/2003/12/13/atom03"/>
+                <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+                <updated>2003-12-13T18:30:02Z</updated>
+                <summary>Some text.</summary>
+            </entry>
+        </feed>    
+    "#;
+
+    assert!(parse_atom_feed(atom_sample).is_err());
+}
+
+#[test]
+pub fn should_fail_on_empty_xml() {
+    let atom_sample = r#"  "#;
+
+    assert!(parse_atom_feed(atom_sample).is_err());
+}
+
+#[test]
+pub fn should_fail_on_empty_entries() {
+    let atom_sample = r#"
+        <?xml version="1.0" encoding="utf-8"?>
+        <feed xmlns="http://www.w3.org/2005/Atom">
+
+            <title>Example Feed</title>
+            <link href="http://example.org/"/>
+            <updated>2003-12-13T18:30:02Z</updated>
+            <author>
+            <name>John Doe
+            </author>
+            <id>urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6</id>
+
+        </feed>    
+    "#;
+
+    assert!(parse_atom_feed(atom_sample).is_err());
+}
+
+#[test]
+pub fn should_fail_on_missing_fields() {
+    let atom_sample = r#"
+        <?xml version="1.0" encoding="utf-8"?>
+        <feed xmlns="http://www.w3.org/2005/Atom">
+            <title>Example Feed</title>
+            <link href="http://example.org/"/>
+            <updated>2003-12-13T18:30:02Z</updated>
+            <id>urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6</id>
+            <entry>
+                <title>Atom-Powered Robots Run Amok</title>
+                <link href="http://example.org/2003/12/13/atom03"/>
+                <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+                <updated></updated>
+            </entry>
+        </feed>    
+    "#;
+
+    assert!(parse_atom_feed(atom_sample).is_err());
+
+    let atom_sample = r#"
+        <?xml version="1.0" encoding="utf-8"?>
+        <feed xmlns="http://www.w3.org/2005/Atom">
+            <title>Example Feed</title>
+            <link href=""/>
+            <updated>2003-12-13T18:30:02Z</updated>
+            <id>urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6</id>
+            <entry>
+                <title>Atom-Powered Robots Run Amok</title>
+                <link href="http://example.org/2003/12/13/atom03"/>
+                <id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+                <updated>2003-12-13T18:30:02Z</updated>
+            </entry>
+        </feed>    
+    "#;
+
+    assert!(parse_atom_feed(atom_sample).is_err());
 }

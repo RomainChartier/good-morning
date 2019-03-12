@@ -34,6 +34,25 @@ pub enum FeedUpdateKind {
     LastArticle,
 }
 
+#[derive(Debug, Fail)]
+pub enum GoodMorningError {
+    #[fail(display = "Xml Parse error")]
+    XmlParse(#[cause] quick_xml::Error),
+    #[fail(display = "Parse error")]
+    Parse,
+    #[fail(display = "Some mandatory information miss from the feed")]
+    MissingFeedInfo,
+
+    #[fail(display = "Error")]
+    Error,
+}
+
+impl From<quick_xml::Error> for GoodMorningError {
+    fn from(error: quick_xml::Error) -> GoodMorningError {
+        GoodMorningError::XmlParse(error)
+    }
+}
+
 pub trait SubscriptionRepository: Send {
     fn init(&self);
     fn get_monitored_feeds(&self) -> Vec<MonitoredFeed>;

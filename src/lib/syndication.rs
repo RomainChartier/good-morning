@@ -36,7 +36,11 @@ pub fn check_feed(feed: &MonitoredFeed) -> Option<FeedCheckResult> {
 fn check_rss(feed: &MonitoredFeed, body: &str) -> Option<FeedCheckResult> {
     debug!("Parsing rss feed {:?}", feed.url);
 
-    let feed = parse_rss_feed(body);
+    let feed = match parse_rss_feed(body).ok() {
+        None => return None,
+        Some(f) => f,
+    };
+
     let channel = feed.channels.first().unwrap(); //TODO ...
     let last_article = channel.items.first(); //TODO ...
 
@@ -54,7 +58,11 @@ fn check_rss(feed: &MonitoredFeed, body: &str) -> Option<FeedCheckResult> {
 fn check_atom(feed: &MonitoredFeed, body: &str) -> Option<FeedCheckResult> {
     debug!("Parsing atom feed {:?}", feed.url);
 
-    let feed = parse_atom_feed(body);
+    let feed = match parse_atom_feed(body).ok() {
+        None => return None,
+        Some(f) => f,
+    };
+
     let last_article = feed.entries.first(); //TODO ...
 
     Some(FeedCheckResult {
