@@ -4,6 +4,7 @@ pub mod data;
 mod import;
 mod rss;
 mod syndication;
+pub mod sendgrid;
 
 use crossbeam::crossbeam_channel::bounded;
 use std::collections::HashSet;

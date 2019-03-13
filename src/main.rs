@@ -1,5 +1,8 @@
 extern crate reqwest;
 
+#[macro_use]
+extern crate serde_derive;
+
 use structopt::StructOpt;
 #[macro_use]
 extern crate log;
@@ -13,7 +16,7 @@ use log::Level;
 use rusqlite::{Connection, OpenFlags};
 
 mod lib;
-
+use lib::sendgrid::*;
 use lib::common::*;
 use lib::data::SQliteSubscriptionRepository;
 
@@ -47,6 +50,10 @@ enum AppCommand {
 }
 
 fn main() -> Result<(), Box<std::error::Error>> {
+
+    send_test_mail();
+    return Ok(());
+
     simple_logger::init_with_level(Level::Error)?;
 
     info!("starting up");
