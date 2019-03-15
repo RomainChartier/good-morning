@@ -16,7 +16,6 @@ use log::Level;
 use rusqlite::{Connection, OpenFlags};
 
 mod lib;
-use lib::sendgrid::*;
 use lib::common::*;
 use lib::data::SQliteSubscriptionRepository;
 
@@ -50,10 +49,6 @@ enum AppCommand {
 }
 
 fn main() -> Result<(), Box<std::error::Error>> {
-
-    send_test_mail();
-    return Ok(());
-
     simple_logger::init_with_level(Level::Error)?;
 
     info!("starting up");
@@ -82,7 +77,9 @@ fn main() -> Result<(), Box<std::error::Error>> {
 
     match &args.cmd {
         AppCommand::ListSub => lib::list_subscription(&repository),
-        AppCommand::Run { dry_run } => lib::run(&repository, *dry_run),
+        AppCommand::Run { dry_run } => {
+            lib::run(&repository, *dry_run, "api_token").expect("run failed...")
+        } //TODO
         AppCommand::Import { file_path } => lib::import_subscriptions(&repository, file_path),
     }
 

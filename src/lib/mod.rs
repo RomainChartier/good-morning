@@ -2,9 +2,10 @@ mod atom;
 pub mod common;
 pub mod data;
 mod import;
+mod notify;
 mod rss;
+mod sendgrid;
 mod syndication;
-pub mod sendgrid;
 
 use crossbeam::crossbeam_channel::bounded;
 use std::collections::HashSet;
@@ -12,6 +13,7 @@ use std::thread;
 
 use common::*;
 use import::*;
+use notify::*;
 use syndication::*;
 
 pub fn list_subscription(repo: &SubscriptionRepository) {
@@ -42,7 +44,12 @@ pub fn import_subscriptions(repo: &SubscriptionRepository, file_path: &str) {
 // TODO from cli
 const PARALLEL_DOWNLOAD_MAX: usize = 4;
 
-pub fn run(repo: &SubscriptionRepository, dry_run: bool) {
+//TODO: make types to handle config
+pub fn run(
+    repo: &SubscriptionRepository,
+    dry_run: bool,
+    api_token: &str,
+) -> Result<(), GoodMorningError> {
     info!("Run (dry: {:?})", dry_run);
 
     let (dl_chan_s, dl_chan_r) = bounded(PARALLEL_DOWNLOAD_MAX * 2);
@@ -69,30 +76,33 @@ pub fn run(repo: &SubscriptionRepository, dry_run: bool) {
 
     drop(storage_chan_s);
 
-    debug!("Starting storage thread");
-    thread::spawn(move || {});
-
     for feed in repo.get_monitored_feeds().into_iter() {
         dl_chan_s.send(feed).unwrap();
     }
 
     drop(dl_chan_s);
 
+    let mut results = Vec::new();
     while let Ok((feed, check_result)) = storage_chan_r.recv() {
-        debug!("processing check result for {:?}", feed.url);
-        process_feed(repo, &feed, &check_result);
+        let update_kind = process_feed(repo, &feed, &check_result);
+        if let Some(update_kind) = update_kind {
+            results.push((feed, update_kind));
+        }
     }
+
+    notify_updates(api_token, results)?;
+    Ok(())
 }
 
 fn process_feed(
     repo: &SubscriptionRepository,
     feed: &MonitoredFeed,
     check_result: &Option<FeedCheckResult>,
-) {
+) -> Option<FeedUpdateKind> {
     let check_result = match check_result {
         None => {
             warn!("Feed without result {:?}", feed.url);
-            return;
+            return None;
         }
         Some(r) => r,
     };
@@ -104,14 +114,7 @@ fn process_feed(
         Some(_) => repo.add_check(&feed, &check_result),
     }
 
-    // Move to notify.rs
-    match update_kind {
-        None => println!("Already up to date {:?}", feed.url),
-        Some(FeedUpdateKind::NewArticle) => println!("NewArticle for {:?}", feed.url),
-        Some(FeedUpdateKind::FirstCheck) => println!("FirstCheck for {:?}", feed.url),
-        Some(FeedUpdateKind::LastArticle) => println!("LastArticle updated for {:?}", feed.url),
-        Some(FeedUpdateKind::Title) => println!("Title updated for {:?}", feed.url),
-    }
+    update_kind
 }
 
 fn get_update_kind(feed: &MonitoredFeed, check_result: &FeedCheckResult) -> Option<FeedUpdateKind> {

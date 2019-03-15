@@ -1,65 +1,64 @@
-use reqwest::*;
+use reqwest::Client;
 
-use serde_derive;
 use super::common::GoodMorningError;
 
 #[derive(Serialize, Debug)]
-struct Personalization{
+pub struct Personalization {
     to: Vec<MailAddress>,
-    subject: String
+    subject: String,
 }
 
 #[derive(Serialize, Debug)]
-struct MailAddress{
+pub struct MailAddress {
     email: String,
 }
 
 #[derive(Serialize, Debug)]
-struct MailContent{
+pub struct MailContent {
     r#type: String,
     value: String,
 }
 
 #[derive(Serialize, Debug)]
-struct MailRequest{
+pub struct MailRequest {
     personalizations: Vec<Personalization>,
     from: MailAddress,
-    content: Vec<MailContent>
+    content: Vec<MailContent>,
 }
 
+impl MailRequest {
+    pub fn new(subject: &str, to_email: &str, from_email: &str, content: &str) -> MailRequest {
+        MailRequest {
+            personalizations: vec![Personalization {
+                subject: subject.to_string(),
+                to: vec![MailAddress {
+                    email: to_email.to_string(),
+                }],
+            }],
+            from: MailAddress {
+                email: from_email.to_string(),
+            },
+            content: vec![MailContent {
+                r#type: "text/plain".to_string(),
+                value: content.to_string(),
+            }],
+        }
+    }
+}
 
-pub fn send_test_mail() {
-   
-    let req = MailRequest{
-        personalizations: vec!(
-            Personalization {
-                subject: "Test!!".to_string(),
-                to: vec!(MailAddress {
-                    email: "".to_string()
-                })
-            }
-        ),
-        from: MailAddress { email: "test@chartier.com".to_string() },
-        content: vec!(MailContent {
-            r#type: "text/plain".to_string(),
-            value: "Salut rom, ça va?".to_string()
-        })
-    };
+pub fn send_mail(api_token: &str, mail_request: &MailRequest) -> Result<(), GoodMorningError> {
+    let request_url = "https://api.sendgrid.com/v3/mail/send".to_string();
 
-    let request_url = format!("https://api.sendgrid.com/v3/mail/send");
-    println!("{}", request_url);
-
-
-    let mut response = dbg!(Client::new()
+    let mut response = Client::new()
         .post(&request_url)
-        .bearer_auth("".to_string())
-        .json(&req)
-        .send()
-        ).expect("");
+        .bearer_auth(api_token)
+        .json(mail_request)
+        .send()?;
 
     println!("{:?}", response.text());
-}
 
+    Ok(())
+}
 
 // Request
 
@@ -94,4 +93,3 @@ pub fn send_test_mail() {
 // {
 //   HTTP/1.1 202
 // }
-

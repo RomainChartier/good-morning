@@ -43,13 +43,19 @@ pub enum GoodMorningError {
     #[fail(display = "Some mandatory information miss from the feed")]
     MissingFeedInfo,
 
-    #[fail(display = "Error")]
-    Error,
+    #[fail(display = "Http error")]
+    HttpError(#[cause] reqwest::Error),
 }
 
 impl From<quick_xml::Error> for GoodMorningError {
     fn from(error: quick_xml::Error) -> GoodMorningError {
         GoodMorningError::XmlParse(error)
+    }
+}
+
+impl From<reqwest::Error> for GoodMorningError {
+    fn from(error: reqwest::Error) -> GoodMorningError {
+        GoodMorningError::HttpError(error)
     }
 }
 
