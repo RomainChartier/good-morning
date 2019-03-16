@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSql, ToSqlOutput, ValueRef};
-use rusqlite::{Connection, Result, NO_PARAMS};
+use rusqlite::{Connection, OpenFlags, Result, NO_PARAMS};
 
 use super::common::*;
 
@@ -11,7 +11,10 @@ pub struct SQliteSubscriptionRepository {
 }
 
 impl SQliteSubscriptionRepository {
-    pub fn new(conn: Connection) -> SQliteSubscriptionRepository {
+    pub fn new(data_file_path: &str) -> SQliteSubscriptionRepository {
+        let flags = OpenFlags::SQLITE_OPEN_READ_WRITE | OpenFlags::SQLITE_OPEN_CREATE;
+        let conn = Connection::open_with_flags(data_file_path, flags).unwrap();
+
         SQliteSubscriptionRepository { conn }
     }
 

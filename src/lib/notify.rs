@@ -1,9 +1,9 @@
 use super::common::*;
-use super::sendgrid::*;
+use super::sendgrid::{send_mail, MailRequest};
 
 //TODO: make types to handle config
 pub fn notify_updates(
-    api_token: &str,
+    config: &Config,
     updates: Vec<(MonitoredFeed, FeedUpdateKind)>,
 ) -> Result<(), GoodMorningError> {
     let mut content: String = String::new();
@@ -24,10 +24,10 @@ pub fn notify_updates(
     }
 
     if !content.is_empty() {
-        let to = "hihihi@hahaha.com";
+        let to = &config.mail_to;
         let mail_request =
             MailRequest::new("New blog posts", to, "good-morning@chartios.com", &content);
-        send_mail(api_token, &mail_request)?;
+        send_mail(&config.sendgrid_token, &mail_request)?;
     }
 
     Ok(())

@@ -15,6 +15,7 @@ crossbeam = "0.7.1"
 failure = "0.1.5"
 serde = "1.0.89"
 serde_derive = "1.0.89"
+toml = "0.5"
 
 [dependencies.rusqlite]
 version = "0.16.0"

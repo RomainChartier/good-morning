@@ -1,9 +1,9 @@
 use chrono::Utc;
 use reqwest;
 
-use super::atom::*;
+use super::atom::parse_atom_feed;
 use super::common::*;
-use super::rss::*;
+use super::rss::parse_rss_feed;
 
 pub fn check_feed(feed: &MonitoredFeed) -> Option<FeedCheckResult> {
     debug!("Checking {:?}", feed.url);

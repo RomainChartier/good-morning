@@ -12,9 +12,9 @@ use std::collections::HashSet;
 use std::thread;
 
 use common::*;
-use import::*;
-use notify::*;
-use syndication::*;
+use import::read_csv;
+use notify::notify_updates;
+use syndication::check_feed;
 
 pub fn list_subscription(repo: &SubscriptionRepository) {
     info!("Listing subscription");
@@ -44,11 +44,10 @@ pub fn import_subscriptions(repo: &SubscriptionRepository, file_path: &str) {
 // TODO from cli
 const PARALLEL_DOWNLOAD_MAX: usize = 4;
 
-//TODO: make types to handle config
 pub fn run(
     repo: &SubscriptionRepository,
     dry_run: bool,
-    api_token: &str,
+    config: &Config,
 ) -> Result<(), GoodMorningError> {
     info!("Run (dry: {:?})", dry_run);
 
@@ -90,7 +89,7 @@ pub fn run(
         }
     }
 
-    notify_updates(api_token, results)?;
+    notify_updates(config, results)?;
     Ok(())
 }
 

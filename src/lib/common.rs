@@ -38,13 +38,27 @@ pub enum FeedUpdateKind {
 pub enum GoodMorningError {
     #[fail(display = "Xml Parse error")]
     XmlParse(#[cause] quick_xml::Error),
+
     #[fail(display = "Parse error")]
     Parse,
+
     #[fail(display = "Some mandatory information miss from the feed")]
     MissingFeedInfo,
 
     #[fail(display = "Http error")]
     HttpError(#[cause] reqwest::Error),
+
+    #[fail(display = "Toml parsing error")]
+    TomlError(#[cause] toml::de::Error),
+
+    #[fail(display = "IO error")]
+    IoError(#[cause] std::io::Error),
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Config {
+    pub sendgrid_token: String,
+    pub mail_to: String,
 }
 
 impl From<quick_xml::Error> for GoodMorningError {
@@ -59,11 +73,22 @@ impl From<reqwest::Error> for GoodMorningError {
     }
 }
 
+impl From<std::io::Error> for GoodMorningError {
+    fn from(error: std::io::Error) -> GoodMorningError {
+        GoodMorningError::IoError(error)
+    }
+}
+
+impl From<toml::de::Error> for GoodMorningError {
+    fn from(error: toml::de::Error) -> GoodMorningError {
+        GoodMorningError::TomlError(error)
+    }
+}
+
 pub trait SubscriptionRepository: Send {
     fn init(&self);
     fn get_monitored_feeds(&self) -> Vec<MonitoredFeed>;
     fn add_sub(&self, url: &str, kind: FeedType);
-
     fn add_check(&self, feed: &MonitoredFeed, check: &FeedCheckResult);
 }
 
