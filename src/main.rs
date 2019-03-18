@@ -14,7 +14,7 @@ extern crate serde_derive;
 
 mod lib;
 
-use lib::common::{Config, GoodMorningError, SubscriptionRepository};
+use lib::common::{Config, GoodMorningError, ReportType, SubscriptionRepository};
 use lib::data::SQliteSubscriptionRepository;
 
 fn main() -> Result<(), Box<std::error::Error>> {
@@ -36,7 +36,11 @@ fn main() -> Result<(), Box<std::error::Error>> {
     let config = load_config("./good-morning.config.toml").expect("config loading failed...");
 
     info!("using data from {:?}", data_file_path);
-    info!("sending mail to {:?}", config.mail_to);
+
+    match &config.report_type {
+        ReportType::Email => info!("sending mail to {:?}", config.mail_to),
+        ReportType::Stdout => info!("reporting to stdout"),
+    }
 
     let repo = SQliteSubscriptionRepository::new(data_file_path);
 

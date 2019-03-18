@@ -17,15 +17,15 @@ use notify::notify_updates;
 use syndication::check_feed;
 
 pub fn list_subscription(repo: &SubscriptionRepository) {
-    info!("Listing subscription");
+    info!("Listing subscriptions");
 
     for feed in repo.get_monitored_feeds().into_iter() {
-        println!("Found {:?}", feed);
+        println!("{} (last update: {})", feed.url, feed.last_check.as_ref().map_or("Never seen", |check| &check.check_date));
     }
 }
 
 pub fn import_subscriptions(repo: &SubscriptionRepository, file_path: &str) {
-    info!("Importing {:?} to db", file_path);
+    info!("Importing {} to db", file_path);
 
     let csv_feeds = read_csv(file_path);
 
@@ -36,7 +36,7 @@ pub fn import_subscriptions(repo: &SubscriptionRepository, file_path: &str) {
         .collect();
 
     for (url, kind) in csv_feeds.difference(&existing_feeds) {
-        println!("Adding new feed {:?}", url);
+        println!("Adding new feed {}", url);
         repo.add_sub(url, *kind);
     }
 }

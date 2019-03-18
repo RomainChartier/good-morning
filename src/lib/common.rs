@@ -56,9 +56,16 @@ pub enum GoodMorningError {
 }
 
 #[derive(Debug, Deserialize)]
+pub enum ReportType {
+    Stdout,
+    Email,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Config {
     pub sendgrid_token: String,
     pub mail_to: String,
+    pub report_type: ReportType,
 }
 
 impl From<quick_xml::Error> for GoodMorningError {
