@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::str::FromStr;
 
-use super::common::*;
+use crate::common::*;
 
 pub fn read_csv(file_path: &str) -> HashSet<(String, FeedType)> {
     debug!("Read csv file {:?}", file_path);

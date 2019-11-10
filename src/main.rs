@@ -12,12 +12,15 @@ extern crate log;
 #[macro_use]
 extern crate serde_derive;
 
+mod common;
 mod lib;
+mod notify;
+mod syndication;
 
-use lib::common::{Config, GoodMorningError, ReportType, SubscriptionRepository};
+use common::{Config, GoodMorningError, ReportType, SubscriptionRepository};
 use lib::data::SQliteSubscriptionRepository;
 
-fn main() -> Result<(), Box<std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     simple_logger::init_with_level(Level::Info)?;
 
     info!("starting up");

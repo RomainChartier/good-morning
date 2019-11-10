@@ -1,9 +1,12 @@
+mod atom;
+mod rss;
+
 use chrono::Utc;
 use reqwest;
 
-use super::atom::parse_atom_feed;
-use super::common::*;
-use super::rss::parse_rss_feed;
+use crate::common::*;
+use atom::parse_atom_feed;
+use rss::parse_rss_feed;
 
 pub fn check_feed(feed: &MonitoredFeed) -> Option<FeedCheckResult> {
     debug!("Checking {:?}", feed.url);

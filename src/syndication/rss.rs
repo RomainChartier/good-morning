@@ -1,7 +1,7 @@
 use quick_xml::events::Event;
 use quick_xml::Reader;
 
-use super::common::GoodMorningError;
+use crate::common::GoodMorningError;
 
 #[derive(Debug)]
 pub struct Feed {

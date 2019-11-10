@@ -1,6 +1,6 @@
 use reqwest::Client;
 
-use super::common::GoodMorningError;
+use crate::common::GoodMorningError;
 
 #[derive(Serialize, Debug)]
 pub struct Personalization {

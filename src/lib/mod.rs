@@ -1,30 +1,30 @@
-mod atom;
-pub mod common;
 pub mod data;
 mod import;
-mod notify;
-mod rss;
-mod sendgrid;
-mod syndication;
 
 use crossbeam::crossbeam_channel::bounded;
 use std::collections::HashSet;
 use std::thread;
 
-use common::*;
+use super::syndication::check_feed;
+use crate::common::*;
+use crate::notify::notify_updates;
 use import::read_csv;
-use notify::notify_updates;
-use syndication::check_feed;
 
-pub fn list_subscription(repo: &SubscriptionRepository) {
+pub fn list_subscription(repo: &dyn SubscriptionRepository) {
     info!("Listing subscriptions");
 
     for feed in repo.get_monitored_feeds().into_iter() {
-        println!("{} (last update: {})", feed.url, feed.last_check.as_ref().map_or("Never seen", |check| &check.check_date));
+        println!(
+            "{} (last update: {})",
+            feed.url,
+            feed.last_check
+                .as_ref()
+                .map_or("Never seen", |check| &check.check_date)
+        );
     }
 }
 
-pub fn import_subscriptions(repo: &SubscriptionRepository, file_path: &str) {
+pub fn import_subscriptions(repo: &dyn SubscriptionRepository, file_path: &str) {
     info!("Importing {} to db", file_path);
 
     let csv_feeds = read_csv(file_path);
@@ -45,7 +45,7 @@ pub fn import_subscriptions(repo: &SubscriptionRepository, file_path: &str) {
 const PARALLEL_DOWNLOAD_MAX: usize = 4;
 
 pub fn run(
-    repo: &SubscriptionRepository,
+    repo: &dyn SubscriptionRepository,
     dry_run: bool,
     config: &Config,
 ) -> Result<(), GoodMorningError> {
@@ -94,7 +94,7 @@ pub fn run(
 }
 
 fn process_feed(
-    repo: &SubscriptionRepository,
+    repo: &dyn SubscriptionRepository,
     feed: &MonitoredFeed,
     check_result: &Option<FeedCheckResult>,
 ) -> Option<FeedUpdateKind> {

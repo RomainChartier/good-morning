@@ -3,7 +3,7 @@ use std::str::FromStr;
 use rusqlite::types::{FromSql, FromSqlError, FromSqlResult, ToSql, ToSqlOutput, ValueRef};
 use rusqlite::{Connection, OpenFlags, Result, NO_PARAMS};
 
-use super::common::*;
+use crate::common::*;
 
 #[derive(Debug)]
 pub struct SQliteSubscriptionRepository {
@@ -128,7 +128,7 @@ impl SubscriptionRepository for SQliteSubscriptionRepository {
         self.conn
             .execute(
                 "INSERT INTO subscription (url, kind) VALUES (?1, ?2)",
-                &[&url as &ToSql, &kind as &ToSql],
+                &[&url as &dyn ToSql, &kind as &dyn ToSql],
             )
             .unwrap();
     }
@@ -140,14 +140,14 @@ impl SubscriptionRepository for SQliteSubscriptionRepository {
                 "INSERT INTO subscription_check (subscription_id, check_date, title, pub_date, last_article_title, last_article_guid, last_article_pub_date, last_article_hash) 
                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
                 &[
-                    &feed.id as &ToSql,
-                    &check.check_date as &ToSql,
-                    &check.title as &ToSql,
-                    &check.pub_date as &ToSql,
-                    &check.last_article_title as &ToSql,
-                    &check.last_article_guid as &ToSql,
-                    &check.last_article_pub_date as &ToSql,
-                    &check.last_article_hash as &ToSql,
+                    &feed.id as &dyn ToSql,
+                    &check.check_date as &dyn ToSql,
+                    &check.title as &dyn ToSql,
+                    &check.pub_date as &dyn ToSql,
+                    &check.last_article_title as &dyn ToSql,
+                    &check.last_article_guid as &dyn ToSql,
+                    &check.last_article_pub_date as &dyn ToSql,
+                    &check.last_article_hash as &dyn ToSql,
                 ]
             )
             .unwrap();

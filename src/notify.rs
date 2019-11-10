@@ -1,5 +1,7 @@
-use super::common::*;
-use super::sendgrid::{send_mail, MailRequest};
+mod sendgrid;
+
+use crate::common::*;
+use sendgrid::{send_mail, MailRequest};
 use std::fmt::Write;
 
 //TODO: make types to handle config
@@ -11,10 +13,18 @@ pub fn notify_updates(
 
     for (feed, update_kind) in updates {
         match update_kind {
-            FeedUpdateKind::NewArticle => writeln!(content, "NewArticle at {}", feed.url).expect("Formatting error"),
-            FeedUpdateKind::FirstCheck => writeln!(content, "FirstCheck for {}", feed.url).expect("Formatting error"),
-            FeedUpdateKind::LastArticle => writeln!(content, "LastArticle updated for {}", feed.url).expect("Formatting error"),
-            FeedUpdateKind::Title => writeln!(content, "Title updated for {}", feed.url).expect("Formatting error"),
+            FeedUpdateKind::NewArticle => {
+                writeln!(content, "NewArticle at {}", feed.url).expect("Formatting error")
+            }
+            FeedUpdateKind::FirstCheck => {
+                writeln!(content, "FirstCheck for {}", feed.url).expect("Formatting error")
+            }
+            FeedUpdateKind::LastArticle => {
+                writeln!(content, "LastArticle updated for {}", feed.url).expect("Formatting error")
+            }
+            FeedUpdateKind::Title => {
+                writeln!(content, "Title updated for {}", feed.url).expect("Formatting error")
+            }
         }
     }
 
